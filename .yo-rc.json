@@ -1,0 +1,27 @@
+{
+  "generator-jhipster": {
+    "applicationIndex": 2,
+    "applicationType": "microservice",
+    "authenticationType": "oauth2",
+    "baseName": "ms_reel",
+    "databaseType": "sql",
+    "devDatabaseType": "mysql",
+    "enableSwaggerCodegen": true,
+    "entities": ["Reel"],
+    "jhipsterVersion": "8.10.0",
+    "jwtSecretKey": "ODY2NDVmOWEzMWUwYmJmNjJmNmZlYzY5ZmRjNWVhNjU3NzA4YTNkOTE3ODk3ZTBkYTdmNDk2ZDhmNDI4OThhMTAzMTIxMzM5ZWZjNGYxNzU5Y2E4OGY4ZmIzN2JkNDc1NjFmNDY1NGRlZTA0NzNlMTAwNmZkMzE5NTZmZDI0MjI=",
+    "languages": ["en"],
+    "lastLiquibaseTimestamp": 1745299455000,
+    "messageBroker": "kafka",
+    "monorepository": true,
+    "nativeLanguage": "en",
+    "packageName": "com.f4.reel",
+    "prodDatabaseType": "mysql",
+    "searchEngine": "elasticsearch",
+    "serverPort": "8082",
+    "serviceDiscoveryType": "consul",
+    "skipClient": true,
+    "skipCommitHook": true,
+    "skipUserManagement": true
+  }
+}
