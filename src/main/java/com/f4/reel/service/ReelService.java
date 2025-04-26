@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.cache.annotation.CachePut;
 
 /**
  * Service Interface for managing {@link com.f4.reel.domain.Reel}.
@@ -66,4 +67,7 @@ public interface ReelService {
      * @return the list of entities.
      */
     Page<ReelDTO> search(String query, Pageable pageable);
+
+    @CachePut(value = "reels", key = "#reel.id")
+    public ReelDTO cacheReel(ReelDTO reel);
 }

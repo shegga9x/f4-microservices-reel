@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.CachePut;
 
 /**
  * Service Implementation for managing {@link com.f4.reel.domain.Reel}.
@@ -99,5 +100,13 @@ public class ReelServiceImpl implements ReelService {
     public Page<ReelDTO> search(String query, Pageable pageable) {
         LOG.debug("Request to search for a page of Reels for query {}", query);
         return reelSearchRepository.search(query, pageable).map(reelMapper::toDto);
+    }
+
+    @Override
+    @CachePut(value = "reels", key = "#reel.id")
+    public ReelDTO cacheReel(ReelDTO reel) {
+        // TODO Auto-generated method stub
+        LOG.info("✅✅✅ cacheReel ===> {}", reel.getId());
+        return reel;
     }
 }
