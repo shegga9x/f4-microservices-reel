@@ -19,6 +19,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
@@ -30,6 +31,7 @@ import tech.jhipster.config.JHipsterConstants;
 import org.yaml.snakeyaml.Yaml;
 
 @SpringBootApplication
+@EnableCaching
 @EnableConfigurationProperties({ LiquibaseProperties.class, ApplicationProperties.class })
 public class DevReel {
 
