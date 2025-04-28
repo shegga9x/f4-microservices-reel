@@ -3,6 +3,7 @@ package com.f4.reel.web.rest;
 import com.f4.reel.repository.ReelRepository;
 import com.f4.reel.service.ReelService;
 import com.f4.reel.service.dto.ReelDTO;
+import com.f4.reel.service.kafka.KafkaProducerService;
 import com.f4.reel.web.rest.errors.BadRequestAlertException;
 import com.f4.reel.web.rest.errors.ElasticsearchExceptionMapper;
 import jakarta.validation.Valid;
@@ -44,9 +45,13 @@ public class ReelResource {
 
     private final ReelRepository reelRepository;
 
-    public ReelResource(ReelService reelService, ReelRepository reelRepository) {
+    private final KafkaProducerService kafkaProducerService;
+
+    public ReelResource(ReelService reelService, ReelRepository reelRepository,
+            KafkaProducerService kafkaProducerService) {
         this.reelService = reelService;
         this.reelRepository = reelRepository;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     /**
@@ -200,5 +205,14 @@ public class ReelResource {
         } catch (RuntimeException e) {
             throw ElasticsearchExceptionMapper.mapException(e);
         }
+    }
+
+    @GetMapping("kafka/send/{id}")
+    public ResponseEntity<ReelDTO> sendMessage(@PathVariable("id") UUID id) {
+        LOG.debug("sendMessage reelId to Kafka : {}", id);
+        Optional<ReelDTO> reelDTO = reelService.findOne(id);
+        String reelString = reelDTO.toString();
+        kafkaProducerService.send("reel-info-topic", reelString);
+        return ResponseUtil.wrapOrNotFound(reelDTO);
     }
 }
