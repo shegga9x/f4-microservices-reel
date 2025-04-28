@@ -19,6 +19,19 @@ logging:
     tech.jhipster: DEBUG
     org.hibernate.SQL: DEBUG
     com.f4.reel: DEBUG
+    
+    io.lettuce.core: INFO
+    io.lettuce.core.protocol: INFO
+    io.lettuce.core.RedisStateMachine: INFO
+    org.redisson: INFO
+
+    org.apache.kafka.clients.NetworkClient: ERROR
+    io.micrometer.core.instrument.MeterRegistry: INFO
+    org.apache.kafka: WARN
+    org.springframework.kafka: WARN
+
+    io.netty: INFO
+    io.micrometer: INFO
 
 management:
   health:

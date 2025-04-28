@@ -16,12 +16,16 @@ import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.client.serviceregistry.Registration;
-import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import tech.jhipster.config.JHipsterConstants;
 import tech.jhipster.config.JHipsterProperties;
 import tech.jhipster.config.cache.PrefixedKeyGenerator;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 @Configuration
 @EnableCaching
@@ -159,5 +163,12 @@ public class CacheConfiguration {
     @Bean
     public KeyGenerator keyGenerator() {
         return new PrefixedKeyGenerator(this.gitProperties, this.buildProperties);
+    }
+
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory() {
+        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration("appf4.io.vn", 6379);
+        config.setPassword("Hiendepzaikhoaitonhatxom");
+        return new LettuceConnectionFactory(config);
     }
 }
