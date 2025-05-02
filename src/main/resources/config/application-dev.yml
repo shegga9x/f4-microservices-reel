@@ -19,6 +19,8 @@ logging:
     tech.jhipster: DEBUG
     org.hibernate.SQL: DEBUG
     com.f4.reel: DEBUG
+    # org.springframework.cloud.stream: DEBUG
+    # org.apache.kafka: DEBUG
 
 management:
   health:

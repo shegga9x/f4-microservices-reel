@@ -1,10 +1,15 @@
 package com.f4.reel.web.rest;
 
 import com.f4.reel.broker.KafkaConsumer;
+import com.f4.reel.service.dto.EventEnvelope;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.security.Principal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
@@ -24,9 +29,14 @@ public class MsReelKafkaResource {
     }
 
     @PostMapping("/publish")
-    public void publish(@RequestParam("message") String message) {
-        LOG.debug("REST request the message : {} to send to Kafka topic ", message);
-        streamBridge.send(PRODUCER_BINDING_NAME, message);
+    public ResponseEntity<Void> publish(
+            @RequestParam("event") String eventName,
+            @RequestBody JsonNode payload) {
+        EventEnvelope<JsonNode> env = new EventEnvelope<>(eventName, payload);
+        boolean sent = streamBridge.send(PRODUCER_BINDING_NAME, env);
+        return sent
+                ? ResponseEntity.accepted().build()
+                : ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
     @GetMapping("/register")

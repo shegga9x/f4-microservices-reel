@@ -2,7 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.f4.reel</groupId>
     <artifactId>ms-reel</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -16,7 +15,6 @@
         <relativePath/>
         <!-- lookup parent from repository -->
     </parent>
-
     <properties>
         <!--
             Build properties
@@ -77,14 +75,13 @@
         <spring.profiles.active>dev</spring.profiles.active>
         <springdoc-openapi-starter-webmvc-api.version>2.8.6</springdoc-openapi-starter-webmvc-api.version>
     </properties>
-
     <dependencyManagement>
         <dependencies>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
+            <dependency>
+                <groupId>com.jcraft</groupId>
+                <artifactId>jsch</artifactId>
+                <version>0.1.55</version>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -94,7 +91,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
     <dependencies>
         <dependency>
             <groupId>com.jcraft</groupId>
@@ -382,7 +378,6 @@
             <version>8.5.3</version>
         </dependency>
     </dependencies>
-
     <build>
         <defaultGoal>spring-boot:run</defaultGoal>
         <resources>
@@ -469,11 +464,11 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${maven-checkstyle-plugin.version}</version>
                     <dependencies>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
+                        <dependency>
+                            <groupId>com.jcraft</groupId>
+                            <artifactId>jsch</artifactId>
+                            <version>0.1.55</version>
+                        </dependency>
                         <dependency>
                             <groupId>com.puppycrawl.tools</groupId>
                             <artifactId>checkstyle</artifactId>
@@ -747,11 +742,11 @@
                         </pluginExtensions>
                     </configuration>
                     <dependencies>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
+                        <dependency>
+                            <groupId>com.jcraft</groupId>
+                            <artifactId>jsch</artifactId>
+                            <version>0.1.55</version>
+                        </dependency>
                         <dependency>
                             <groupId>com.google.cloud.tools</groupId>
                             <artifactId>jib-spring-boot-extension-maven</artifactId>
@@ -870,11 +865,11 @@
                         <diffExcludeObjects>oauth_access_token, oauth_approvals, oauth_client_details, oauth_client_token, oauth_code, oauth_refresh_token</diffExcludeObjects>
                     </configuration>
                     <dependencies>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
+                        <dependency>
+                            <groupId>com.jcraft</groupId>
+                            <artifactId>jsch</artifactId>
+                            <version>0.1.55</version>
+                        </dependency>
                         <dependency>
                             <groupId>org.liquibase</groupId>
                             <artifactId>liquibase-core</artifactId>
@@ -930,7 +925,6 @@
             </plugins>
         </pluginManagement>
     </build>
-
     <profiles>
         <profile>
             <id>api-docs</id>
@@ -952,11 +946,11 @@
                 <spring.profiles.active>dev${profile.tls}${profile.no-liquibase}</spring.profiles.active>
             </properties>
             <dependencies>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
+                <dependency>
+                    <groupId>com.jcraft</groupId>
+                    <artifactId>jsch</artifactId>
+                    <version>0.1.55</version>
+                </dependency>
                 <dependency>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-devtools</artifactId>
@@ -970,11 +964,11 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <dependencies>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
+                <dependency>
+                    <groupId>com.jcraft</groupId>
+                    <artifactId>jsch</artifactId>
+                    <version>0.1.55</version>
+                </dependency>
                 <dependency>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-docker-compose</artifactId>
@@ -991,15 +985,19 @@
                 </property>
             </activation>
             <dependencies>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
+                <dependency>
+                    <groupId>com.jcraft</groupId>
+                    <artifactId>jsch</artifactId>
+                    <version>0.1.55</version>
+                </dependency>
                 <dependency>
                     <!-- The following dependency is added due to issue #9175-->
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-undertow</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-jsr310</artifactId>
                 </dependency>
             </dependencies>
             <build>
@@ -1059,11 +1057,11 @@
             -->
             <id>IDE</id>
             <dependencies>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
+                <dependency>
+                    <groupId>com.jcraft</groupId>
+                    <artifactId>jsch</artifactId>
+                    <version>0.1.55</version>
+                </dependency>
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-jpamodelgen</artifactId>
@@ -1134,11 +1132,11 @@
             -->
             <id>zipkin</id>
             <dependencies>
-        <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
-        </dependency>
+                <dependency>
+                    <groupId>com.jcraft</groupId>
+                    <artifactId>jsch</artifactId>
+                    <version>0.1.55</version>
+                </dependency>
                 <dependency>
                     <groupId>io.micrometer</groupId>
                     <artifactId>micrometer-tracing</artifactId>
