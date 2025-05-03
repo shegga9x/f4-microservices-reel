@@ -1,4 +1,4 @@
-package com.f4.reel.service.dto;
+package com.f4.reel.handler;
 
 // wraps any payload with an eventName
 

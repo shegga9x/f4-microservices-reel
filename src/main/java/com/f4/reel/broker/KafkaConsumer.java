@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.f4.reel.handler.EventDispatcher;
-import com.f4.reel.service.dto.EventEnvelope;
+import com.f4.reel.handler.EventEnvelope;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
