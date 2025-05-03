@@ -44,7 +44,7 @@ spring:
     stream:
       defaultBinder: kafka
       function:
-        definition: input;output
+        definition: kafkaConsumer;kafkaProducer
       bindings:
         kafkaConsumer-in-0:
           destination: ${ssh.service-name}-input
