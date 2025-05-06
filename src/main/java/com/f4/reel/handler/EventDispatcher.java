@@ -25,6 +25,7 @@ public class EventDispatcher {
                 .collect(Collectors.toMap(EventHandler::getEventName, h -> h));
     }
 
+    @SuppressWarnings("unchecked")
     public void dispatch(EventEnvelope<JsonNode> env) throws Exception {
         String name = env.getEventName();
         EventHandler<?> handler = handlers.get(name);

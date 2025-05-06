@@ -44,10 +44,10 @@ spring:
     stream:
       defaultBinder: kafka
       function:
-        definition: kafkaConsumer;kafkaProducer
+        definition: kafkaConsumer,kafkaProducer
       bindings:
         kafkaConsumer-in-0:
-          destination: ${ssh.service-name}-input
+          destination: ${ssh.service-name}-output
           contentType: application/json
           group: ${ssh.service-name}
         kafkaProducer-out-0:
@@ -56,7 +56,8 @@ spring:
       kafka:
         binder:
           brokers: appf4.io.vn:9092
-          auto-create-topics: true
+          autoCreateTopics: true
+          replicationFactor: 1
           configuration:
             security.protocol: SSL
             ssl.endpoint.identification.algorithm: ""
@@ -68,11 +69,14 @@ spring:
         bindings:
           kafkaConsumer-in-0:
             consumer:
+              concurrency: 3
               autoCommitOffset: true
               startOffset: latest
               enableDlq: true
           kafkaProducer-out-0:
             producer:
+              partitionCount: 3
+              # partitionKeyExpression: "1"
               sync: false
               bufferSize: 16384
       # Configure task scheduler for graceful shutdown
@@ -104,21 +108,6 @@ spring:
     url: jdbc:mysql://microservices.appf4.io.vn:${ssh.mysql_port}/${ssh.mysql_database}
   liquibase:
     url: jdbc:mysql://microservices.appf4.io.vn:${ssh.mysql_port}/${ssh.mysql_database}?useUnicode=true&characterEncoding=utf8&useSSL=false&createDatabaseIfNotExist=true
-  kafka:
-    bootstrap-servers: appf4.io.vn:9092
-    security-protocol: SSL
-    ssl:
-      endpoint-identification-algorithm: ""
-    properties:
-      ssl:
-        truststore:
-          location: classpath:config/tls/kafka.truststore.jks
-          password: f4security
-        keystore:
-          location: classpath:config/tls/kafka.keystore.jks
-          password: f4security
-        key:
-          password: f4security
   # Graceful shutdown configuration to prevent task rejection
   lifecycle:
     timeout-per-shutdown-phase: 20s
