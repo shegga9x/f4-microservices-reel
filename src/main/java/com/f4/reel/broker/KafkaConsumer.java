@@ -59,7 +59,7 @@ public class KafkaConsumer implements Consumer<String> {
 
     @Override
     public void accept(String rawJson) {
-        long startTime = System.currentTimeMillis(); // Start time tracking
+        ThreadLocal<Long> startTime = ThreadLocal.withInitial(System::currentTimeMillis); // Start time tracking
 
         CompletableFuture
                 .supplyAsync(() -> parseEnvelope(rawJson),
@@ -67,11 +67,13 @@ public class KafkaConsumer implements Consumer<String> {
                 .thenCompose(env -> dispatchAndBroadcast(env, rawJson))
                 .thenAccept(v -> {
                     long endTime = System.currentTimeMillis(); // End time tracking
-                    LOG.debug("✅ Successfully handled event in {} ms", (endTime - startTime));
+                    LOG.debug("✅ Successfully handled event in {} ms", (endTime - startTime.get()));
+                    startTime.remove(); // Clean up thread-local variable
                 })
                 .exceptionally(ex -> {
                     long endTime = System.currentTimeMillis(); // End time tracking
-                    LOG.error("❌ Failed to process event in {} ms", (endTime - startTime), ex);
+                    LOG.error("❌ Failed to process event in {} ms", (endTime - startTime.get()), ex);
+                    startTime.remove(); // Clean up thread-local variable
                     return null;
                 });
     }
