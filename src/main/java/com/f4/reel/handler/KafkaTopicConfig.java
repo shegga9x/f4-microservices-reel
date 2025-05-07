@@ -45,11 +45,9 @@ public class KafkaTopicConfig {
         this.sslEndpointIdentificationAlgorithm = sslEndpointIdentificationAlgorithm;
     }
 
-    @SuppressWarnings("deprecation")
     @PostConstruct
     public void ensureTopic() throws IOException {
         String bs = env.getProperty("spring.stream.cloud.kafka.binder.brokers", "appf4.io.vn:9092");
-        String topic = "reel-output";
         int partitions = 3;
         short repl = 1;
         Properties cfg = new Properties();
@@ -63,15 +61,31 @@ public class KafkaTopicConfig {
         cfg.put("ssl.truststore.password", sslTruststorePassword);
         try (AdminClient admin = AdminClient.create(cfg)) {
             Set<String> names = admin.listTopics().names().get();
-            if (!names.contains(topic)) {
-                admin.createTopics(Collections.singleton(new NewTopic(topic, partitions, repl))).all().get();
-            } else if (admin.describeTopics(Collections.singleton(topic)).all().get().get(topic).partitions()
-                    .size() != partitions) {
-                admin.createPartitions(Collections.singletonMap(topic, NewPartitions.increaseTo(partitions))).all()
-                        .get();
-            }
+
+            // Ensure main topic exists
+            ensureTopicExists(admin, names, KafkaConstants.TOPIC_NAME_IN, partitions, repl);
+
+            // Ensure status topic exists
+            ensureTopicExists(admin, names, KafkaConstants.TOPIC_NAME_OUT, partitions, repl);
         } catch (Exception e) {
             System.err.println("[WARN] Kafka topic setup: " + e.getMessage());
+        }
+    }
+
+    private void ensureTopicExists(AdminClient admin, Set<String> existingTopics, String topicName, int partitions,
+            short replication) {
+        try {
+            if (!existingTopics.contains(topicName)) {
+                admin.createTopics(Collections.singleton(new NewTopic(topicName, partitions, replication))).all().get();
+                System.out.println("[INFO] Created Kafka topic: " + topicName);
+            } else if (admin.describeTopics(Collections.singleton(topicName)).all().get().get(topicName).partitions()
+                    .size() != partitions) {
+                admin.createPartitions(Collections.singletonMap(topicName, NewPartitions.increaseTo(partitions))).all()
+                        .get();
+                System.out.println("[INFO] Updated partitions for Kafka topic: " + topicName);
+            }
+        } catch (Exception e) {
+            System.err.println("[WARN] Failed to setup topic " + topicName + ": " + e.getMessage());
         }
     }
 

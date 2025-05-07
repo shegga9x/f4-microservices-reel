@@ -47,11 +47,11 @@ spring:
         definition: kafkaConsumer,kafkaProducer
       bindings:
         kafkaConsumer-in-0:
-          destination: ${ssh.service-name}-output
+          destination: ${ssh.service-name}-input
           contentType: application/json
           group: ${ssh.service-name}
         kafkaProducer-out-0:
-          destination: ${ssh.service-name}-output
+          destination: ${ssh.service-name}-input
           contentType: application/json
       kafka:
         binder:

@@ -3,6 +3,7 @@ package com.f4.reel.broker;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,20 +13,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.f4.reel.handler.EventDispatcher;
 import com.f4.reel.handler.EventEnvelope;
+import com.f4.reel.handler.KafkaConstants;
+import com.f4.reel.handler.KafkaStoreService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.springframework.messaging.Message;
 import jakarta.annotation.PreDestroy;
 
 @Component
-public class KafkaConsumer implements Consumer<String> {
+public class KafkaConsumer implements Consumer<Message<String>> {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumer.class);
 
@@ -33,10 +37,15 @@ public class KafkaConsumer implements Consumer<String> {
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
     private final TaskExecutor taskExecutor;
+    private final KafkaProducer kafkaProducer;
+    private final KafkaStoreService messageStoreService;
 
-    public KafkaConsumer(EventDispatcher dispatcher, TaskExecutor taskExecutor) {
+    public KafkaConsumer(EventDispatcher dispatcher, TaskExecutor taskExecutor,
+            KafkaProducer kafkaProducer, KafkaStoreService messageStoreService) {
         this.dispatcher = dispatcher;
         this.taskExecutor = taskExecutor;
+        this.kafkaProducer = kafkaProducer;
+        this.messageStoreService = messageStoreService;
     }
 
     public SseEmitter register(String key) {
@@ -58,23 +67,41 @@ public class KafkaConsumer implements Consumer<String> {
     }
 
     @Override
-    public void accept(String rawJson) {
+    public void accept(Message<String> message) {
         ThreadLocal<Long> startTime = ThreadLocal.withInitial(System::currentTimeMillis); // Start time tracking
 
+        // First try our custom header
+        final String correlationId = Optional.ofNullable(message.getHeaders().get("correlationId", String.class))
+                .orElse(message.getHeaders().get(KafkaHeaders.KEY, String.class));
+
+        // Generate a new correlation ID if none exists
+        final String finalCorrelationId = correlationId != null ? correlationId : UUID.randomUUID().toString();
+
+        // Store the incoming message with its correlation ID
+        messageStoreService.storeMessage(finalCorrelationId, message, "INCOMING", KafkaConstants.TOPIC_NAME_IN);
+
+        String rawJson = message.getPayload();
+        // … now use correlationId in your success / error callbacks …
         CompletableFuture
                 .supplyAsync(() -> parseEnvelope(rawJson),
                         CompletableFuture.delayedExecutor(0, java.util.concurrent.TimeUnit.MILLISECONDS, taskExecutor))
                 .thenCompose(env -> dispatchAndBroadcast(env, rawJson))
                 .thenAccept(v -> {
-                    long endTime = System.currentTimeMillis(); // End time tracking
-                    LOG.debug("✅ Successfully handled event in {} ms", (endTime - startTime.get()));
-                    startTime.remove(); // Clean up thread-local variable
+                    long end = System.currentTimeMillis();
+                    LOG.debug("✅ Success in {}ms", end - startTime.get());
+                    startTime.remove();
+                    kafkaProducer.sendSuccessStatus(finalCorrelationId,
+                            Map.of("processingTimeMs", end - startTime.get()));
                 })
                 .exceptionally(ex -> {
-                    long endTime = System.currentTimeMillis(); // End time tracking
-                    LOG.error("❌ Failed to process event in {} ms", (endTime - startTime.get()), ex);
-                    startTime.remove(); // Clean up thread-local variable
-                    return null;
+                    long end = System.currentTimeMillis();
+                    LOG.error("❌ Error in {}ms", end - startTime.get(), ex);
+                    startTime.remove();
+                    kafkaProducer.sendErrorStatus(
+                            finalCorrelationId,
+                            ex.getMessage(),
+                            Map.of("processingTimeMs", end - startTime.get()));
+                    return null; // swallow
                 });
     }
 
@@ -98,6 +125,7 @@ public class KafkaConsumer implements Consumer<String> {
                 dispatcher.dispatch(env);
             } catch (Exception e) {
                 LOG.error("Error dispatching event", e);
+                throw new RuntimeException("Error dispatching event", e);
             }
             // cleanup any dead SSE clients
             emitters.values().removeIf(em -> !sendSse(em, env));
