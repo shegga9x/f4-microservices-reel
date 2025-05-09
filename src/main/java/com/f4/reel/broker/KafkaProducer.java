@@ -77,16 +77,16 @@ public class KafkaProducer implements Supplier<Message<String>> {
 
     @Override
     public Message<String> get() {
-        // int lastPartition = (int) (Math.random() * 9) + 2; // Randomly select
+        int lastPartition = (int) (Math.random() * 9) + 2; // Randomly select
         // partition 2 to 10
-        // for (int i = 0; i < lastPartition; i++) {
-        // sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
-        // sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
-        // sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
-        // sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
-        // sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
-        // sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
-        // }
+        for (int i = 0; i < lastPartition; i++) {
+        sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
+        sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
+        sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
+        sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
+        sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
+        sendOne(KafkaConstants.TOPIC_NAME_IN, buildFakeDto());
+        }
 
         String correlationId = UUID.randomUUID().toString();
         return MessageBuilder

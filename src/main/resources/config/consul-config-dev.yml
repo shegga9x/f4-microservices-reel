@@ -50,6 +50,18 @@ spring:
           destination: ${ssh.service-name}-input
           contentType: application/json
           group: ${ssh.service-name}
+          consumer:
+            # Retry configuration 
+            maxAttempts: 5
+            backOffInitialInterval: 1000
+            backOffMaxInterval: 10000
+            backOffMultiplier: 2.0
+            # Record processing error behavior
+            enableDlq: true
+            dlqName: ${ssh.service-name}-input.DLT
+            dlqPartitions: 1
+            autoCommitOffset: true
+            startOffset: latest
         kafkaProducer-out-0:
           destination: ${ssh.service-name}-input
           contentType: application/json

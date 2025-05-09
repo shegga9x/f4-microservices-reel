@@ -7,13 +7,16 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -29,7 +32,7 @@ import org.springframework.messaging.Message;
 import jakarta.annotation.PreDestroy;
 
 @Component
-public class KafkaConsumer implements Consumer<Message<String>> {
+public class KafkaConsumer {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumer.class);
 
@@ -66,13 +69,28 @@ public class KafkaConsumer implements Consumer<Message<String>> {
         // No need to shutdown taskExecutor as it is managed by Spring
     }
 
-    @Override
-    public void accept(Message<String> message) {
+    @KafkaListener(topics = "${ssh.service-name:reel}-input", groupId = "${kafka.consumer.group-id:reel-group}", containerFactory = "kafkaListenerContainerFactory")
+    public void processMessage(
+            @Payload String payload,
+            @Header(name = KafkaHeaders.RECEIVED_KEY, required = false) String key,
+            @Header(name = "correlationId", required = false) String correlationIdHeader,
+            @Header(name = KafkaHeaders.RECEIVED_TOPIC) String topic,
+            @Header(name = KafkaHeaders.RECEIVED_PARTITION) int partition,
+            @Header(name = KafkaHeaders.DELIVERY_ATTEMPT, required = false) Integer deliveryAttempt,
+            Message<String> message,
+            Acknowledgment acknowledgment) {
+
         ThreadLocal<Long> startTime = ThreadLocal.withInitial(System::currentTimeMillis); // Start time tracking
 
         // First try our custom header
-        final String correlationId = Optional.ofNullable(message.getHeaders().get("correlationId", String.class))
-                .orElse(message.getHeaders().get(KafkaHeaders.KEY, String.class));
+        final String correlationId = Optional.ofNullable(correlationIdHeader)
+                .orElse(key);
+
+        // Log retry attempts if present
+        if (deliveryAttempt != null && deliveryAttempt > 1) {
+            LOG.info("Processing retry attempt {} for message with correlation ID: {}",
+                    deliveryAttempt, correlationId);
+        }
 
         // Generate a new correlation ID if none exists
         final String finalCorrelationId = correlationId != null ? correlationId : UUID.randomUUID().toString();
@@ -80,29 +98,57 @@ public class KafkaConsumer implements Consumer<Message<String>> {
         // Store the incoming message with its correlation ID
         messageStoreService.storeMessage(finalCorrelationId, message, "INCOMING", KafkaConstants.TOPIC_NAME_IN);
 
-        String rawJson = message.getPayload();
+        String rawJson = payload;
         // … now use correlationId in your success / error callbacks …
-        CompletableFuture
-                .supplyAsync(() -> parseEnvelope(rawJson),
-                        CompletableFuture.delayedExecutor(0, java.util.concurrent.TimeUnit.MILLISECONDS, taskExecutor))
-                .thenCompose(env -> dispatchAndBroadcast(env, rawJson))
-                .thenAccept(v -> {
-                    long end = System.currentTimeMillis();
-                    LOG.debug("✅ Success in {}ms", end - startTime.get());
-                    startTime.remove();
-                    kafkaProducer.sendSuccessStatus(finalCorrelationId,
-                            Map.of("processingTimeMs", end - startTime.get()));
-                })
-                .exceptionally(ex -> {
-                    long end = System.currentTimeMillis();
-                    LOG.error("❌ Error in {}ms", end - startTime.get(), ex);
-                    startTime.remove();
-                    kafkaProducer.sendErrorStatus(
-                            finalCorrelationId,
-                            ex.getMessage(),
-                            Map.of("processingTimeMs", end - startTime.get()));
-                    return null; // swallow
-                });
+        try {
+            CompletableFuture
+                    .supplyAsync(() -> parseEnvelope(rawJson),
+                            CompletableFuture.delayedExecutor(0, java.util.concurrent.TimeUnit.MILLISECONDS,
+                                    taskExecutor))
+                    .thenCompose(env -> dispatchAndBroadcast(env, rawJson))
+                    .thenAccept(v -> {
+                        long end = System.currentTimeMillis();
+                        LOG.debug("✅ Success in {}ms", end - startTime.get());
+                        startTime.remove();
+                        kafkaProducer.sendSuccessStatus(finalCorrelationId,
+                                Map.of("processingTimeMs", end - startTime.get()));
+                        // Acknowledge successful processing
+                        acknowledgment.acknowledge();
+                    })
+                    .exceptionally(ex -> {
+                        long end = System.currentTimeMillis();
+
+                        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+
+                        if (cause instanceof RetryableException) {
+                            LOG.warn("⚠️ Retryable error in {}ms. This will trigger a retry: {}",
+                                    end - startTime.get(), cause.getMessage());
+                            // Don't acknowledge - let the container retry
+                            throw new RuntimeException("Retryable error: " + cause.getMessage(), cause);
+                        } else {
+                            LOG.error("❌ Non-retryable error in {}ms", end - startTime.get(), ex);
+                            startTime.remove();
+                            kafkaProducer.sendErrorStatus(
+                                    finalCorrelationId,
+                                    ex.getMessage(),
+                                    Map.of("processingTimeMs", end - startTime.get()));
+                            // Acknowledge to prevent endless retries for non-retryable errors
+                            acknowledgment.acknowledge();
+                        }
+                        return null; // swallow
+                    }).get(); // Block to ensure completion - we want to handle exceptions synchronously
+        } catch (Exception e) {
+            // If we have a RetryableException, don't ack so the message will be redelivered
+            if (shouldRetry(e)) {
+                LOG.warn("Encountered retryable exception, not acknowledging message to trigger retry", e);
+                // Let the exception propagate to trigger retry
+                throw new RuntimeException("Retryable exception encountered", e);
+            } else {
+                // For other exceptions, ack to prevent endless redelivery
+                LOG.error("Encountered non-retryable exception, acknowledging message", e);
+                acknowledgment.acknowledge();
+            }
+        }
     }
 
     private EventEnvelope<JsonNode> parseEnvelope(String rawJson) {
@@ -124,12 +170,41 @@ public class KafkaConsumer implements Consumer<Message<String>> {
             try {
                 dispatcher.dispatch(env);
             } catch (Exception e) {
-                LOG.error("Error dispatching event", e);
-                throw new RuntimeException("Error dispatching event", e);
+                // Determine if this exception should trigger a retry
+                if (shouldRetry(e)) {
+                    LOG.warn("Error dispatching event - will retry", e);
+                    throw new RetryableException("Error dispatching event", e);
+                } else {
+                    LOG.error("Error dispatching event - will not retry", e);
+                    throw new RuntimeException("Error dispatching event", e);
+                }
             }
             // cleanup any dead SSE clients
             emitters.values().removeIf(em -> !sendSse(em, env));
         }, CompletableFuture.delayedExecutor(0, java.util.concurrent.TimeUnit.MILLISECONDS, taskExecutor));
+    }
+
+    /**
+     * Determines if an exception should trigger a retry.
+     *
+     * @param exception The exception to check
+     * @return true if the exception should trigger a retry, false otherwise
+     */
+    private boolean shouldRetry(Exception exception) {
+        Throwable cause = exception;
+        while (cause != null) {
+            if (cause instanceof RetryableException ||
+                    cause instanceof java.net.SocketTimeoutException ||
+                    cause instanceof java.io.IOException ||
+                    cause instanceof java.sql.SQLException ||
+                    cause instanceof org.hibernate.StaleObjectStateException ||
+                    (cause.getMessage() != null && (cause.getMessage().toLowerCase().contains("timeout") ||
+                            cause.getMessage().toLowerCase().contains("connection refused")))) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 
     private boolean sendSse(SseEmitter emitter, EventEnvelope<JsonNode> env) {
@@ -145,5 +220,4 @@ public class KafkaConsumer implements Consumer<Message<String>> {
             return false;
         }
     }
-
 }

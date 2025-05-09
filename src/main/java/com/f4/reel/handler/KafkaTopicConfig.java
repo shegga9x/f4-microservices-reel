@@ -59,6 +59,7 @@ public class KafkaTopicConfig {
         cfg.put("ssl.key.password", sslKeyPassword);
         cfg.put("ssl.truststore.location", resolveResourceToFile(sslTruststoreLocation).getAbsolutePath());
         cfg.put("ssl.truststore.password", sslTruststorePassword);
+        System.out.println(resolveResourceToFile(sslTruststoreLocation).getAbsolutePath());
         try (AdminClient admin = AdminClient.create(cfg)) {
             Set<String> names = admin.listTopics().names().get();
 
