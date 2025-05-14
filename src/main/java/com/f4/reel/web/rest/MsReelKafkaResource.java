@@ -1,7 +1,7 @@
 package com.f4.reel.web.rest;
 
-import com.f4.reel.broker.KafkaConsumer;
-import com.f4.reel.handler.EventEnvelope;
+import com.f4.reel.kafka.broker.KafkaConsumer;
+import com.f4.reel.kafka.handler.EventEnvelope;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.security.Principal;
@@ -23,7 +23,7 @@ public class MsReelKafkaResource {
     private final KafkaConsumer kafkaConsumer;
     private final StreamBridge streamBridge;
 
-    public MsReelKafkaResource(StreamBridge streamBridge, KafkaConsumer kafkaConsumer) {
+    public MsReelKafkaResource(StreamBridge streamBridge, com.f4.reel.kafka.broker.KafkaConsumer kafkaConsumer) {
         this.streamBridge = streamBridge;
         this.kafkaConsumer = kafkaConsumer;
     }

@@ -1,8 +1,8 @@
-package com.f4.reel.handler.events;
+package com.f4.reel.kafka.handler.events;
 
 import org.springframework.stereotype.Component;
 
-import com.f4.reel.handler.EventHandler;
+import com.f4.reel.kafka.handler.EventHandler;
 import com.f4.reel.service.ReelService;
 import com.f4.reel.service.dto.ReelDTO;
 

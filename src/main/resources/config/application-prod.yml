@@ -45,7 +45,7 @@ spring:
       port: 8500
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://microservices.appf4.io.vn:3382/reel
+    url: jdbc:mysql://microservices.appf4s.io.vn:3382/reel
     username: root
     password:
     hikari:
