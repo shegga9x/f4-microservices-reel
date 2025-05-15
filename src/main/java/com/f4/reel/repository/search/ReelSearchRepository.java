@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -19,7 +20,8 @@ import org.springframework.scheduling.annotation.Async;
 /**
  * Spring Data Elasticsearch repository for the {@link Reel} entity.
  */
-public interface ReelSearchRepository extends ElasticsearchRepository<Reel, UUID>, ReelSearchRepositoryInternal {}
+public interface ReelSearchRepository extends ElasticsearchRepository<Reel, UUID>, ReelSearchRepositoryInternal {
+}
 
 interface ReelSearchRepositoryInternal {
     Page<Reel> search(String query, Pageable pageable);
@@ -31,6 +33,8 @@ interface ReelSearchRepositoryInternal {
 
     @Async
     void deleteFromIndexById(UUID id);
+
+    void reindexAll();
 }
 
 class ReelSearchRepositoryInternalImpl implements ReelSearchRepositoryInternal {
@@ -64,5 +68,20 @@ class ReelSearchRepositoryInternalImpl implements ReelSearchRepositoryInternal {
     @Override
     public void deleteFromIndexById(UUID id) {
         elasticsearchTemplate.delete(String.valueOf(id), Reel.class);
+    }
+
+    @Override
+    public void reindexAll() {
+        int pageSize = 50000;
+        int pageNumber = 0;
+        Page<Reel> page;
+        do {
+            page = repository.findAll(PageRequest.of(pageNumber, pageSize));
+            List<Reel> entities = page.getContent();
+            elasticsearchTemplate.save(entities); // batch save if possible
+            long count = elasticsearchTemplate.count(NativeQuery.builder().build(), Reel.class);
+            System.out.println("Indexed " + entities.size() + " reels. Total in Elasticsearch: " + count);
+            pageNumber++;
+        } while (page.hasNext());
     }
 }

@@ -66,4 +66,10 @@ public interface ReelService {
      * @return the list of entities.
      */
     Page<ReelDTO> search(String query, Pageable pageable);
+
+    /**
+     * Reindex all Reel entities to Elasticsearch
+     * This is useful for rebuilding the index from scratch
+     */
+    void reindexAll();
 }

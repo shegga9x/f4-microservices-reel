@@ -30,7 +30,8 @@ public class ReelServiceImpl implements ReelService {
 
     private final ReelSearchRepository reelSearchRepository;
 
-    public ReelServiceImpl(ReelRepository reelRepository, ReelMapper reelMapper, ReelSearchRepository reelSearchRepository) {
+    public ReelServiceImpl(ReelRepository reelRepository, ReelMapper reelMapper,
+            ReelSearchRepository reelSearchRepository) {
         this.reelRepository = reelRepository;
         this.reelMapper = reelMapper;
         this.reelSearchRepository = reelSearchRepository;
@@ -59,18 +60,18 @@ public class ReelServiceImpl implements ReelService {
         LOG.debug("Request to partially update Reel : {}", reelDTO);
 
         return reelRepository
-            .findById(reelDTO.getId())
-            .map(existingReel -> {
-                reelMapper.partialUpdate(existingReel, reelDTO);
+                .findById(reelDTO.getId())
+                .map(existingReel -> {
+                    reelMapper.partialUpdate(existingReel, reelDTO);
 
-                return existingReel;
-            })
-            .map(reelRepository::save)
-            .map(savedReel -> {
-                reelSearchRepository.index(savedReel);
-                return savedReel;
-            })
-            .map(reelMapper::toDto);
+                    return existingReel;
+                })
+                .map(reelRepository::save)
+                .map(savedReel -> {
+                    reelSearchRepository.index(savedReel);
+                    return savedReel;
+                })
+                .map(reelMapper::toDto);
     }
 
     @Override
@@ -99,5 +100,17 @@ public class ReelServiceImpl implements ReelService {
     public Page<ReelDTO> search(String query, Pageable pageable) {
         LOG.debug("Request to search for a page of Reels for query {}", query);
         return reelSearchRepository.search(query, pageable).map(reelMapper::toDto);
+    }
+
+    /**
+     * Reindex all Reel entities to Elasticsearch
+     * This is useful for rebuilding the index from scratch
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public void reindexAll() {
+        LOG.info("Request to reindex all Reels");
+        reelSearchRepository.reindexAll();
+        LOG.info("Finished reindexing all Reels");
     }
 }
