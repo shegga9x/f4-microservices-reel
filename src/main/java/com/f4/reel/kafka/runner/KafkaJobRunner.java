@@ -78,11 +78,10 @@ public class KafkaJobRunner {
      * @param event the Kafka event to process
      * @param task  the task to execute with the event
      */
-    public void submitEventJob(EventEnvelope event, Runnable task) {
+    public void submitEventJob(EventEnvelope event, String key, Runnable task) {
         String eventName = event.getEventName();
-        String jobId = eventName + "-" + System.currentTimeMillis();
 
-        submitJob(jobId, eventName, event.getPayload(), task);
+        submitJob(key, eventName, event.getPayload(), task);
     }
 
     /**

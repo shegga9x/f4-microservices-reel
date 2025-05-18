@@ -63,15 +63,17 @@ public class KafkaTestController {
         log.info("REST request to prepare and DIRECTLY SEND Reel via Kafka: {}", request);
 
         try {
-            kafkaProducer.triggerReelEventPreparationAndDirectSend(
+            kafkaProducer.send(
                     UUID.fromString(request.getUserId()),
                     request.getTitle(),
                     request.getVideoUrl());
 
-            return ResponseEntity.ok("Reel event preparation and direct send attempt initiated via KafkaProducer. Check logs for StreamBridge status from KafkaUtilityService.");
+            return ResponseEntity.ok(
+                    "Reel event preparation and direct send attempt initiated via KafkaProducer. Check logs for StreamBridge status from KafkaUtilityService.");
         } catch (Exception e) {
             log.error("Failed to prepare and attempt direct send for reel event via KafkaProducer", e);
-            return ResponseEntity.badRequest().body("Failed during direct send attempt via KafkaProducer: " + e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body("Failed during direct send attempt via KafkaProducer: " + e.getMessage());
         }
     }
 }

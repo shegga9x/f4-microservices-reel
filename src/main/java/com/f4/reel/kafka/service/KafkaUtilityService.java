@@ -58,45 +58,27 @@ public class KafkaUtilityService {
     public boolean producer_prepareAndAttemptDirectSendReelEvent(
             UUID userId, String title, String videoUrl,
             String configuredOutputTopic,
-            AtomicReference<EventEnvelope> messageToSupplyRef) {
-        PRODUCER_LOG.info("Helper: Preparing Avro reel event. Target topic from config for 'kafkaProducer-out-0': {}",
-                configuredOutputTopic);
-        boolean sentDirectly = false;
+            AtomicReference<EventEnvelope> messageToSupply, AtomicReference<String> keyToSupply) {
         try {
-            // Use AvroConverter to create the envelope
+            // Generate a unique key per message
             EventEnvelope envelope = AvroConverter.createPostReelEvent(userId, title, videoUrl);
-
-            messageToSupplyRef.set(envelope);
-            PRODUCER_LOG.info("Helper: Reel event prepared and stored for supplier pattern via reference.");
-
-            String directSendBinding = "kafkaProducer-out-0"; // This is the binding name
-            PRODUCER_LOG.info("Helper: Attempting direct send to binding: '{}' with message for event: {}",
-                    directSendBinding, envelope.getEventName());
-
-            sentDirectly = streamBridge.send(directSendBinding, envelope);
-
-            if (sentDirectly) {
-                PRODUCER_LOG.info(
-                        "Helper: SUCCESS: StreamBridge.send(\"{}\") returned true. The binder accepted the message.",
-                        directSendBinding);
-            } else {
-                PRODUCER_LOG.warn(
-                        "Helper: FAILURE: StreamBridge.send(\"{}\") returned false. Message was not accepted by the binder for sending.",
-                        directSendBinding);
-            }
-            return sentDirectly;
-
+            messageToSupply.set(envelope);
+            String uniqueKey = UUID.randomUUID().toString();
+            keyToSupply.set(uniqueKey);
+            PRODUCER_LOG.info("Generated unique key for Kafka message: {}", uniqueKey);
+            return true;
         } catch (Exception e) {
-            PRODUCER_LOG.error("Helper: Error during prepareAndAttemptDirectSendReelEvent: {}", e.getMessage(), e);
-            messageToSupplyRef.set(null); // Clear if preparation or send fails
-            throw new RuntimeException("Helper: Error in prepareAndAttemptDirectSendReelEvent: " + e.getMessage(), e);
+            PRODUCER_LOG.error("Error delegating to KafkaUtilityService: {}", e.getMessage(), e);
+            messageToSupply.set(null);
+            keyToSupply.set(null);
+            return false;
         }
     }
 
     // --- Helpers for KafkaConsumer ---
 
-    public void submitEventJob(EventEnvelope avroMessage) {
-        jobRunner.submitEventJob(avroMessage, () -> consumeAndProcessMessage(avroMessage));
+    public void submitEventJob(EventEnvelope avroMessage, String keyStr) {
+        jobRunner.submitEventJob(avroMessage, keyStr, () -> consumeAndProcessMessage(avroMessage));
     }
 
     public void consumeAndProcessMessage(EventEnvelope avroMessage) {
@@ -111,7 +93,7 @@ public class KafkaUtilityService {
                         throw new IllegalArgumentException("Event name cannot be null");
                     }
 
-                    if (avroMessage.getPayload() != null && "postReel".equals(eventName)) {
+                    if (avroMessage.getPayload() != null) {
                         // Map Avro DTO to Service DTO
                         serviceReelDTO = consumer_mapAvroToServiceReelDTO(avroMessage.getPayload());
 
@@ -152,7 +134,7 @@ public class KafkaUtilityService {
                 }
             }, context -> {
                 CONSUMER_LOG.error("Message processing failed after {} attempts, sending to DLQ. Event: {}",
-                        context.getRetryCount() + 1,
+                        context.getRetryCount(),
                         (avroMessage.getEventName() != null ? avroMessage.getEventName() : "UNKNOWN_EVENT"));
                 Exception exception = (Exception) context.getLastThrowable();
                 consumer_sendToDlq(avroMessage, exception, dlqTopic, dlqEnabled, avroMessage.toString());

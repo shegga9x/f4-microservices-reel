@@ -5,12 +5,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
+import org.springframework.messaging.Message;
 import com.f4.reel.avro.EventEnvelope;
 import com.f4.reel.kafka.service.KafkaUtilityService;
 
 @Component
-public class KafkaConsumer implements Consumer<EventEnvelope> {
+public class KafkaConsumer implements Consumer<Message<EventEnvelope>> {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumer.class);
 
@@ -21,15 +21,20 @@ public class KafkaConsumer implements Consumer<EventEnvelope> {
     }
 
     @Override
-    public void accept(EventEnvelope avroMessage) {
+    public void accept(Message<EventEnvelope> message) {
+        EventEnvelope avroMessage = message.getPayload();
         if (avroMessage == null) {
-            LOG.error("Received null Avro message - possible deserialization issue");
+            LOG.error("Received null Avro message");
             return;
         }
 
-        LOG.debug("Got Avro message from kafka stream: {}", avroMessage);
+        // Extract key from headers (KafkaHeaders.MESSAGE_KEY)
+        byte[] keyBytes = (byte[]) message.getHeaders().get("kafka_messageKey");
+        String keyStr = keyBytes != null ? new String(keyBytes) : null;
 
-        kafkaUtilityService.submitEventJob(avroMessage);
+        LOG.debug("Got Avro message with key [{}]: {}", keyStr, avroMessage);
+
+        kafkaUtilityService.submitEventJob(avroMessage, keyStr);
     }
 
     public SseEmitter register(String key) {
