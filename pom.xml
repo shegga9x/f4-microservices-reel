@@ -398,6 +398,19 @@
             <artifactId>spring-cloud-schema-registry-client</artifactId>
             <version>1.1.5</version>
         </dependency>
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.23.5</version>
+        </dependency>
+        <!-- Redisson JCache Integration -->
+        <!-- Hibernate JCache -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-jcache</artifactId>
+            <version>6.4.4.Final</version>
+            <!-- or match your Hibernate version -->
+        </dependency>
     </dependencies>
     <build>
         <defaultGoal>spring-boot:run</defaultGoal>

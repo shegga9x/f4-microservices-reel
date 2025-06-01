@@ -75,10 +75,6 @@ spring:
             bufferSize: 16384
             errorChannelEnabled: true
       kafka:
-        job:
-          thread-pool-size: 10
-          thread-name-prefix: kafka-job-
-          completion-topic: job-completion
         binder:
           brokers: appf4.io.vn:9092
           auto-create-topics: true
