@@ -28,9 +28,9 @@ public class KafkaConsumer implements Consumer<Message<EventEnvelope>> {
             return;
         }
 
-        // Extract key from headers (KafkaHeaders.MESSAGE_KEY)
-        byte[] keyBytes = (byte[]) message.getHeaders().get("kafka_messageKey");
-        String keyStr = keyBytes != null ? new String(keyBytes) : null;
+        // Extract key from headers (kafka_receivedMessageKey)
+        Object keyObject = message.getHeaders().get("kafka_receivedMessageKey");
+        String keyStr = keyObject != null ? keyObject.toString() : null;
 
         LOG.debug("Got Avro message with key [{}]: {}", keyStr, avroMessage);
 

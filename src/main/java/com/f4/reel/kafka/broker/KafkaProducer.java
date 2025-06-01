@@ -29,9 +29,10 @@ public class KafkaProducer implements Supplier<Message<EventEnvelope>> {
         this.kafkaUtilityService = kafkaUtilityService;
     }
 
-    public boolean send(UUID userId, String title, String videoUrl) {
+    public String send(String eventName, UUID userId, String title, String videoUrl) {
         log.info("KafkaProducer: Preparing reel event and generating unique key.");
-        return kafkaUtilityService.producer_prepareAndAttemptDirectSendReelEvent(userId, title, videoUrl,
+        return kafkaUtilityService.producer_prepareAndAttemptDirectSendReelEvent(
+                eventName, userId, title, videoUrl,
                 configuredOutputTopic, messageToSupply, keyToSupply);
     }
 
@@ -49,4 +50,5 @@ public class KafkaProducer implements Supplier<Message<EventEnvelope>> {
             return null;
         }
     }
+
 }

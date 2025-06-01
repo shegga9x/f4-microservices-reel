@@ -55,23 +55,23 @@ public class KafkaUtilityService {
 
     // --- Helper for KafkaProducer ---
 
-    public boolean producer_prepareAndAttemptDirectSendReelEvent(
-            UUID userId, String title, String videoUrl,
+    public String producer_prepareAndAttemptDirectSendReelEvent(
+            String eventName, UUID userId, String title, String videoUrl,
             String configuredOutputTopic,
             AtomicReference<EventEnvelope> messageToSupply, AtomicReference<String> keyToSupply) {
         try {
             // Generate a unique key per message
-            EventEnvelope envelope = AvroConverter.createPostReelEvent(userId, title, videoUrl);
+            EventEnvelope envelope = AvroConverter.createPostReelEvent(eventName, userId, title, videoUrl);
             messageToSupply.set(envelope);
             String uniqueKey = UUID.randomUUID().toString();
             keyToSupply.set(uniqueKey);
             PRODUCER_LOG.info("Generated unique key for Kafka message: {}", uniqueKey);
-            return true;
+            return uniqueKey;
         } catch (Exception e) {
             PRODUCER_LOG.error("Error delegating to KafkaUtilityService: {}", e.getMessage(), e);
             messageToSupply.set(null);
             keyToSupply.set(null);
-            return false;
+            return null;
         }
     }
 
@@ -138,7 +138,7 @@ public class KafkaUtilityService {
                         (avroMessage.getEventName() != null ? avroMessage.getEventName() : "UNKNOWN_EVENT"));
                 Exception exception = (Exception) context.getLastThrowable();
                 consumer_sendToDlq(avroMessage, exception, dlqTopic, dlqEnabled, avroMessage.toString());
-                return null;
+                throw exception; // Rethrow to ensure the retry mechanism handles it
             });
         } catch (Exception e) {
             CONSUMER_LOG.error(
@@ -146,6 +146,8 @@ public class KafkaUtilityService {
                     e.getMessage(),
                     (avroMessage.getEventName() != null ? avroMessage.getEventName() : "UNKNOWN_EVENT"), e);
             consumer_sendToDlq(avroMessage, e, dlqTopic, dlqEnabled, avroMessage.toString());
+            throw new RuntimeException(
+                    "Fatal error in message processing, sent to DLQ: " + e.getMessage(), e);
         }
     }
 

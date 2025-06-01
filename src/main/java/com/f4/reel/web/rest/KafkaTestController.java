@@ -24,6 +24,7 @@ public class KafkaTestController {
     }
 
     public static class ReelRequest {
+        private String eventName;
         private String userId;
         private String title;
         private String videoUrl;
@@ -56,6 +57,14 @@ public class KafkaTestController {
         public String toString() {
             return "ReelRequest [userId=" + userId + ", title=" + title + ", videoUrl=" + videoUrl + "]";
         }
+
+        public String getEventName() {
+            return eventName;
+        }
+
+        public void setEventName(String eventName) {
+            this.eventName = eventName;
+        }
     }
 
     @PostMapping("/send-reel-direct")
@@ -63,13 +72,12 @@ public class KafkaTestController {
         log.info("REST request to prepare and DIRECTLY SEND Reel via Kafka: {}", request);
 
         try {
-            kafkaProducer.send(
-                    UUID.fromString(request.getUserId()),
-                    request.getTitle(),
-                    request.getVideoUrl());
-
             return ResponseEntity.ok(
-                    "Reel event preparation and direct send attempt initiated via KafkaProducer. Check logs for StreamBridge status from KafkaUtilityService.");
+                    kafkaProducer.send(
+                            request.getEventName(),
+                            UUID.fromString(request.getUserId()),
+                            request.getTitle(),
+                            request.getVideoUrl()));
         } catch (Exception e) {
             log.error("Failed to prepare and attempt direct send for reel event via KafkaProducer", e);
             return ResponseEntity.badRequest()
