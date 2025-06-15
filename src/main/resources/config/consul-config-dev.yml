@@ -158,8 +158,8 @@ pexels:
   api-key: ${PEXELS_API_KEY:E95y4qkSdeaH7cT2bZxgd7fMpxl6KnOiLGohb7LvRQL1RPEOLhEH1f5K}
   base-url: https://api.pexels.com/v1
 
-minio:
-  endpoint: https://minio.appf4.io.vn
-  access-key: minioadmin
-  secret-key: minioadmin
-  bucket-name: pexels-images
+# minio:
+#   endpoint: https://minio.appf4.io.vn
+#   access-key: minioadmin
+#   secret-key: minioadmin
+#   bucket-name: pexels-images
