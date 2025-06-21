@@ -3,26 +3,82 @@
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <!-- Step 1: Create temp tables -->
     <changeSet id="202506190001-1" author="jhipster">
-        <comment>Load reel IDs from CSV</comment>
-
-        <!-- Step 1: Create temp table -->
-        <createTable tableName="temp_reel_ids">
-            <column name="id" type="VARCHAR(36)" />
-        </createTable>
-
-        <!-- Step 2: Load CSV -->
-        <loadData
-            file="config/liquibase/reel_ids.csv"
-            tableName="temp_reel_ids"
-            separator=","
-            encoding="UTF-8"
-            />
-        
-        <!-- Step 3: Check the count (debug only) -->
+        <comment>Create temp_reel_ids table</comment>
         <sql>
-            SELECT COUNT(*) AS count FROM temp_reel_ids;
+            CREATE TABLE IF NOT EXISTS temp_reel_ids (
+                id VARCHAR(36)
+            );
         </sql>
     </changeSet>
+    <changeSet id="202506190001-1a" author="jhipster">
+        <comment>Create temp_user_ids table</comment>
+        <sql>
+            CREATE TABLE IF NOT EXISTS temp_user_ids (
+                id VARCHAR(36)
+            );
+        </sql>
+    </changeSet>
+    <!-- Step 2: Load data into temp tables -->
+    <changeSet id="202506190001-2" author="jhipster">
+        <comment>Load reel IDs</comment>
+        <sql>
+            LOAD DATA LOCAL INFILE '../data/reel_ids.csv'
+            INTO TABLE temp_reel_ids
+            FIELDS TERMINATED BY ','
+            LINES TERMINATED BY '\n'
+            IGNORE 1 ROWS
+            (id);
+        </sql>
+    </changeSet>
+    <changeSet id="202506190001-2a" author="jhipster">
+        <comment>Load user IDs</comment>
+        <sql>
+            LOAD DATA LOCAL INFILE '../data/user_ids.csv'
+            INTO TABLE temp_user_ids
+            FIELDS TERMINATED BY ','
+            LINES TERMINATED BY '\n'
+            IGNORE 1 ROWS
+            (id);
+        </sql>
+    </changeSet>
+    <changeSet id="202506200005-insert-reels" author="jhipster">
+        <sql>
+        -- Initialize row numbers
+        SET @reel_rn := 0;
+        SET @user_rn := 0;
 
+        -- Create indexed temp tables
+        CREATE TEMPORARY TABLE indexed_reels AS
+        SELECT id AS reel_id, (@reel_rn := @reel_rn + 1) AS rn
+        FROM temp_reel_ids;
+
+        CREATE TEMPORARY TABLE indexed_users AS
+        SELECT id AS user_id, (@user_rn := @user_rn + 1) AS rn
+        FROM temp_user_ids;
+
+        -- Get total number of users for round-robin assignment
+        SELECT COUNT(*) INTO @total_users FROM indexed_users;
+
+        -- Insert reels with round-robin assigned users
+        INSERT INTO reel (id, user_id, title, video_url, created_at)
+        SELECT
+            r.reel_id,
+            (SELECT user_id FROM indexed_users u WHERE u.rn = ((r.rn - 1) % @total_users) + 1),
+            CONCAT('Reel #', r.rn),
+            CONCAT('http://video.url/', r.rn, '.mp4'),
+            NOW()
+        FROM indexed_reels r
+        LIMIT 500000;
+        </sql>
+    </changeSet>
+    <!-- Step 5: Drop temp tables -->
+    <changeSet id="202506190001-4" author="jhipster">
+        <comment>Drop temporary tables</comment>
+        <sql>
+            DROP TABLE IF EXISTS temp_reel_ids; 
+            DROP TABLE IF EXISTS temp_user_ids;
+        </sql>
+    </changeSet>
 </databaseChangeLog>

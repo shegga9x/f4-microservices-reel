@@ -5,11 +5,15 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
                         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
-
     <!--
         Added the entity Reel.
     -->
     <changeSet id="20250422052415-1" author="jhipster">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="reel"/>
+            </not>
+        </preConditions>
         <createTable tableName="reel">
             <column name="id" type="${uuidType}">
                 <constraints primaryKey="true" nullable="false"/>
@@ -30,13 +34,11 @@
         </createTable>
         <dropDefaultValue tableName="reel" columnName="created_at" columnDataType="${datetimeType}"/>
     </changeSet>
-
     <!-- jhipster-needle-liquibase-add-changeset - JHipster will add changesets here -->
-
     <!--
         Load sample data generated with Faker.js
         - This data can be easily edited using a CSV editor (or even MS Excel) and
-          is located in the 'src/main/resources/config/liquibase/fake-data' directory
+          is located in the '../fake-data' directory
         - By default this data is applied when running with the JHipster 'dev' profile.
           This can be customized by adding or removing 'faker' in the 'spring.liquibase.contexts'
           Spring Boot configuration key.
