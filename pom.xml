@@ -922,7 +922,6 @@
                         <expressionVars>
                             <csv_path>${project.basedir}/../data</csv_path>
                         </expressionVars>
-                        <!-- <propertyFile>liquibase.properties</propertyFile> -->
                     </configuration>
                     <dependencies>
                         <dependency>
@@ -1144,7 +1143,7 @@
             <properties>
                 <!-- default Spring profiles -->
                 <liquibase-plugin.password/>
-                <liquibase-plugin.url>jdbc:mysql://microservices.appf4.io.vn:3382/reel</liquibase-plugin.url>
+                <liquibase-plugin.url>jdbc:mysql://microservices.appf4.io.vn:3382/reel?allowLoadLocalInfile=true</liquibase-plugin.url>
                 <liquibase-plugin.username>root</liquibase-plugin.username>
                 <profile.test>test,testprod</profile.test>
                 <spring.profiles.active>prod${profile.api-docs}${profile.tls}${profile.e2e}${profile.no-liquibase}</spring.profiles.active>
