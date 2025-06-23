@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   NotificationDTO.JSON_PROPERTY_IS_READ,
   NotificationDTO.JSON_PROPERTY_CREATED_AT
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-06-23T12:21:05.800642270+07:00[Asia/Ho_Chi_Minh]", comments = "Generator version: 7.13.0")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-06-23T12:26:39.485368339+07:00[Asia/Ho_Chi_Minh]", comments = "Generator version: 7.13.0")
 public class NotificationDTO {
   public static final String JSON_PROPERTY_ID = "id";
   @javax.annotation.Nonnull
