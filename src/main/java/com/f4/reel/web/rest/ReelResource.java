@@ -5,6 +5,8 @@ import com.f4.reel.service.ReelService;
 import com.f4.reel.service.dto.ReelDTO;
 import com.f4.reel.web.rest.errors.BadRequestAlertException;
 import com.f4.reel.web.rest.errors.ElasticsearchExceptionMapper;
+import com.f4.reel.client.api.UserResourceApi;
+import com.f4.reel.client.model.UserDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -44,9 +46,12 @@ public class ReelResource {
 
     private final ReelRepository reelRepository;
 
-    public ReelResource(ReelService reelService, ReelRepository reelRepository) {
+    private final UserResourceApi userResourceApi;
+
+    public ReelResource(ReelService reelService, ReelRepository reelRepository, UserResourceApi userResourceApi) {
         this.reelService = reelService;
         this.reelRepository = reelRepository;
+        this.userResourceApi = userResourceApi;
     }
 
     /**
@@ -201,4 +206,27 @@ public class ReelResource {
             throw ElasticsearchExceptionMapper.mapException(e);
         }
     }
+    
+    /**
+     * {@code GET  /reels/test-users} : Test endpoint to get all users from user service.
+     *
+     * @param page the page number (optional, default to 0)
+     * @param size the page size (optional, default to 20) 
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of users in body.
+     */
+    @GetMapping("/test-users")
+    public ResponseEntity<List<UserDTO>> testGetAllUsers(
+        @RequestParam(value = "page", defaultValue = "0") Integer page,
+        @RequestParam(value = "size", defaultValue = "20") Integer size
+    ) {
+        LOG.debug("REST request to test getAllUsers from user service - page: {}, size: {}", page, size);
+        try {
+            List<UserDTO> users = userResourceApi.getAllUsers(page, size, null);
+            return ResponseEntity.ok().body(users);
+        } catch (Exception e) {
+            LOG.error("Error calling user service getAllUsers: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch users from user service", e);
+        }
+    }
+
 }
