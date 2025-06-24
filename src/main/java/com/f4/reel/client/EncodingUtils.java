@@ -18,7 +18,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
+import java.nio.charset.StandardCharsets;
 /**
 * Utilities to support Swagger encoding formats in Feign.
 */
