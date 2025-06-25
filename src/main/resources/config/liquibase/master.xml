@@ -16,7 +16,4 @@
     <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->
     <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
     <!-- jhipster-needle-liquibase-add-incremental-changelog - JHipster will add incremental liquibase changelogs here -->
-    
-    <!-- Bulk data load - only runs when explicitly requested with context "bulk-data" -->
-    <include file="config/liquibase/changelog/20250501000000_added_bulk_data.xml" relativeToChangelogFile="false" />
 </databaseChangeLog>
