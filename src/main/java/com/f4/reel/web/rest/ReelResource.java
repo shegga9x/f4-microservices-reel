@@ -221,7 +221,7 @@ public class ReelResource {
     ) {
         LOG.debug("REST request to test getAllUsers from user service - page: {}, size: {}", page, size);
         try {
-            List<UserDTO> users = userResourceApi.getAllUsers(page, size, null);
+            List<UserDTO> users = userResourceApi.getAllUsers();
             return ResponseEntity.ok().body(users);
         } catch (Exception e) {
             LOG.error("Error calling user service getAllUsers: {}", e.getMessage(), e);
