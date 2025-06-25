@@ -22,7 +22,7 @@ spring:
       on-profile: '!api-docs'
 springdoc:
   api-docs:
-    enabled: true
+    enabled: false
 ---
 feign:
   circuitbreaker:

@@ -2,7 +2,7 @@
   "annotations": {
     "changelogDate": "20250422052415"
   },
-  "applications": ["ms_reel"],
+  "applications": ["gateway", "ms_reel"],
   "clientRootFolder": "ms_reel",
   "databaseType": "sql",
   "dto": "mapstruct",

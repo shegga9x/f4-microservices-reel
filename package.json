@@ -22,7 +22,7 @@
     "ci:e2e:server:start": "java -jar target/e2e.$npm_package_config_packaging --spring.profiles.active=e2e,$npm_package_config_default_environment -Dlogging.level.ROOT=OFF -Dlogging.level.tech.jhipster=OFF -Dlogging.level.com.f4.reel=OFF -Dlogging.level.org.springframework=OFF -Dlogging.level.org.springframework.web=OFF -Dlogging.level.org.springframework.security=OFF --logging.level.org.springframework.web=ERROR",
     "ci:e2e:teardown": "npm run ci:e2e:teardown:docker --if-present",
     "ci:e2e:teardown:docker": "docker compose -f src/main/docker/services.yml down -v && docker ps -a",
-    "ci:server:await": "echo \"Waiting for server at port $npm_package_config_backend_port to start\" && wait-on -t 360000 http-get://127.0.0.1:undefined/services/ms_reel/management/health/readiness && echo \"Server at port $npm_package_config_backend_port started\"",
+    "ci:server:await": "echo \"Waiting for server at port $npm_package_config_backend_port to start\" && wait-on -t 360000 http-get://127.0.0.1:8080/services/ms_reel/management/health/readiness && echo \"Server at port $npm_package_config_backend_port started\"",
     "docker:consul:down": "docker compose -f src/main/docker/consul.yml down -v",
     "docker:consul:up": "docker compose -f src/main/docker/consul.yml up --wait",
     "docker:db:down": "docker compose -f src/main/docker/mysql.yml down -v",
@@ -46,7 +46,7 @@
     "services:up": "docker compose -f src/main/docker/services.yml up --wait"
   },
   "config": {
-    "backend_port": "8082",
+    "backend_port": "8080",
     "default_environment": "prod",
     "packaging": "jar"
   },

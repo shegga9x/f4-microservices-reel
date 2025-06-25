@@ -6,14 +6,11 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 /**
  * A DTO for the {@link com.f4.reel.domain.Reel} entity.
  */
 @SuppressWarnings("common-java:DuplicatedBlocks")
 public class ReelDTO implements Serializable {
-    private Long version;
 
     @NotNull
     private UUID id;
@@ -28,7 +25,6 @@ public class ReelDTO implements Serializable {
     private String videoUrl;
 
     @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     private Instant createdAt;
 
     public UUID getId() {
@@ -71,14 +67,6 @@ public class ReelDTO implements Serializable {
         this.createdAt = createdAt;
     }
 
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -104,11 +92,11 @@ public class ReelDTO implements Serializable {
     @Override
     public String toString() {
         return "ReelDTO{" +
-                "id='" + getId() + "'" +
-                ", userId='" + getUserId() + "'" +
-                ", title='" + getTitle() + "'" +
-                ", videoUrl='" + getVideoUrl() + "'" +
-                ", createdAt='" + getCreatedAt() + "'" +
-                "}";
+            "id='" + getId() + "'" +
+            ", userId='" + getUserId() + "'" +
+            ", title='" + getTitle() + "'" +
+            ", videoUrl='" + getVideoUrl() + "'" +
+            ", createdAt='" + getCreatedAt() + "'" +
+            "}";
     }
 }
