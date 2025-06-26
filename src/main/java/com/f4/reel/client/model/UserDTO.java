@@ -1,6 +1,6 @@
 /*
- * Ms Feed API
- * Ms Feed API documentation
+ * Ms Commentlike API
+ * Ms Commentlike API documentation
  *
  * The version of the OpenAPI document: 0.0.1
  * Contact: 
@@ -34,9 +34,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   UserDTO.JSON_PROPERTY_EMAIL,
   UserDTO.JSON_PROPERTY_PASSWORD_HASH,
   UserDTO.JSON_PROPERTY_CREATED_AT,
-  UserDTO.JSON_PROPERTY_KEYCLOAK_USER_ID
+  UserDTO.JSON_PROPERTY_KEYCLOAK_USER_ID,
+  UserDTO.JSON_PROPERTY_USER_AVATAR
 })
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-06-26T07:34:31.980696460+07:00[Asia/Ho_Chi_Minh]", comments = "Generator version: 7.13.0")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2025-06-26T11:42:54.992157831+07:00[Asia/Ho_Chi_Minh]", comments = "Generator version: 7.13.0")
 public class UserDTO {
   public static final String JSON_PROPERTY_ID = "id";
   @javax.annotation.Nonnull
@@ -61,6 +62,10 @@ public class UserDTO {
   public static final String JSON_PROPERTY_KEYCLOAK_USER_ID = "keycloakUserId";
   @javax.annotation.Nonnull
   private UUID keycloakUserId;
+
+  public static final String JSON_PROPERTY_USER_AVATAR = "userAvatar";
+  @javax.annotation.Nullable
+  private String userAvatar;
 
   public UserDTO() {
   }
@@ -221,6 +226,32 @@ public class UserDTO {
   }
 
 
+  public UserDTO userAvatar(@javax.annotation.Nullable String userAvatar) {
+    
+    this.userAvatar = userAvatar;
+    return this;
+  }
+
+  /**
+   * Get userAvatar
+   * @return userAvatar
+   */
+  @javax.annotation.Nullable
+  @JsonProperty(JSON_PROPERTY_USER_AVATAR)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getUserAvatar() {
+    return userAvatar;
+  }
+
+
+  @JsonProperty(JSON_PROPERTY_USER_AVATAR)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setUserAvatar(@javax.annotation.Nullable String userAvatar) {
+    this.userAvatar = userAvatar;
+  }
+
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -235,12 +266,13 @@ public class UserDTO {
         Objects.equals(this.email, userDTO.email) &&
         Objects.equals(this.passwordHash, userDTO.passwordHash) &&
         Objects.equals(this.createdAt, userDTO.createdAt) &&
-        Objects.equals(this.keycloakUserId, userDTO.keycloakUserId);
+        Objects.equals(this.keycloakUserId, userDTO.keycloakUserId) &&
+        Objects.equals(this.userAvatar, userDTO.userAvatar);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, username, email, passwordHash, createdAt, keycloakUserId);
+    return Objects.hash(id, username, email, passwordHash, createdAt, keycloakUserId, userAvatar);
   }
 
   @Override
@@ -253,6 +285,7 @@ public class UserDTO {
     sb.append("    passwordHash: ").append(toIndentedString(passwordHash)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    keycloakUserId: ").append(toIndentedString(keycloakUserId)).append("\n");
+    sb.append("    userAvatar: ").append(toIndentedString(userAvatar)).append("\n");
     sb.append("}");
     return sb.toString();
   }
